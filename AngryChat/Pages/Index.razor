@@ -1,20 +1,41 @@
 ﻿@page "/"
+@using BlazorServerSignalRApp.Server.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
+@using static BlazorServerSignalRApp.Server.Hubs.ChatHub
 @inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
 
+
+<button class="btn btn-primary" @onclick="update">Update</button>
+
+<br />
+<br />
 <div class="form-group">
     <label>
-        User:
-        <input @bind="userInput" />
+        From:
+        <input @bind="Sender" class="inputForm" />
     </label>
+</div>
+
+<div class="form-group">
+    To:
+    <select @bind="RecieverID" class="inputForm">
+        <option>Pick an ID</option>
+        @foreach (var id in IDS)
+        {
+            @if (id != hubConnection.ConnectionId)
+            {
+                <option value="@id">@id</option>
+            }
+        }
+    </select>
 </div>
 <div class="form-group">
     <label>
         Message:
-        <input @bind="messageInput" size="50" />
+        <input @bind="Message" size="50" class="inputForm" />
     </label>
 </div>
 <button @onclick="Send" disabled="@(!IsConnected)">Send</button>
@@ -22,29 +43,54 @@
 <hr>
 
 <ul id="messagesList">
+    Your Connection ID is: @hubConnection.ConnectionId
+    <hr>
     @foreach (var message in messages)
     {
-        <li>@message</li>
+        <li>@((MarkupString)message)</li>
     }
 </ul>
 
+
 @code {
+
     private HubConnection? hubConnection;
     private List<string> messages = new List<string>();
-    private string? userInput;
-    private string? messageInput;
+    private string? Sender;
+    private string? Message;
+    private string? RecieverID;
+
+    HashSet<string> IDS = UserHandler.ConnectedIds;
+
+
+    protected void update()
+    {
+        IDS = UserHandler.ConnectedIds;
+    }
 
     protected override async Task OnInitializedAsync()
     {
+
         hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/chathub"))
             .Build();
 
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+
+        hubConnection.On<string, string, string, string>("ReceiveMessage", (sender, message, recieverid, senderid) =>
         {
-            var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
-            InvokeAsync(StateHasChanged);
+            Console.WriteLine("recieve function");
+            if (recieverid == hubConnection.ConnectionId || senderid  == hubConnection.ConnectionId)
+            {
+                var encodedMsg = "";
+                if (recieverid == hubConnection.ConnectionId)
+                    encodedMsg = $"{sender}({senderid}): {message}";
+                else
+                    encodedMsg = $"You -> {recieverid}: {message}";
+
+                messages.Add(encodedMsg);
+                InvokeAsync(StateHasChanged);
+            }
+
         });
 
         await hubConnection.StartAsync();
@@ -53,9 +99,10 @@
     private async Task Send()
     {
         if (hubConnection is not null)
-            {
-                await hubConnection.SendAsync("SendMessage", userInput, messageInput);
-            }
+        {
+            Console.WriteLine("send function");
+            await hubConnection.SendAsync("SendMessage", Sender, Message, RecieverID, hubConnection.ConnectionId);
+        }
     }
 
     public bool IsConnected =>
@@ -65,7 +112,10 @@
     {
         if (hubConnection is not null)
         {
+            Console.WriteLine("Dispose function called");
             await hubConnection.DisposeAsync();
         }
     }
+
+
 }

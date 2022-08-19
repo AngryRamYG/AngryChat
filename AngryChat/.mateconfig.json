@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "name": "dev",
+      "js": {
+        "declaration": false,
+        "webClean": true
+      }
+    }
+  ],
+  "files": [
+    {
+      "output": "wwwroot/css/index.css",
+      "input": "src/css/index.less"
+    }
+  ]
+}
