@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Components;
 using BlazorServerSignalRApp.Server.Hubs;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Azure.Cosmos;
-using AngryChat.CosmosDatabase;
 using System.Linq.Expressions;
 using Microsoft.Azure.Cosmos.Linq;
 
@@ -19,9 +18,8 @@ namespace AngryChat.Pages
         List<Conversation> Conversations { get; set; } = new List<Conversation>();
         List<Message> Messages { get; set; } = new List<Message>();
 
-        public cosmos createCosmos = new();
         public string NewConversationName { get; set; }
-        public string SelectedConversation { get; set; }
+        public string? SelectedConversation { get; set; } = "None";
         public string MessageString { get; set; }
 
 

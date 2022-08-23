@@ -8,6 +8,7 @@
 <PageTitle>Index</PageTitle>
 
 <section class="groups">
+    <div><h1>Groups: </h1></div>
     <div>
         <div class="groups-new">
             <input type="text" @bind-value="NewConversationName" @bind-value:event="oninput" />
@@ -15,10 +16,10 @@
         </div>
         <div class="groups-select">
             <select @bind-value="SelectedConversation" @onclick="RetrieveMessages" @bind-value:event="oninput" class="inputForm">
-                <option>Select Group</option>
+                <option value="None">Select Group</option>
                 @foreach (Conversation conversation in Conversations)
                 {
-                    <option value="@conversation.ID" >@conversation.Name</option>
+                    <option value="@conversation.ID">@conversation.Name</option>
                 }
             </select>
         </div>
@@ -50,36 +51,27 @@
         }
     </select>
 </div>*@
-
-<section class="messages">
-    <div>
-        <div class="messages-input">
-            Message:
-            <input type="text" @bind-value="MessageString" @bind-value:event="oninput" />
-            <button @onclick="SendMessage">Send</button>
+@if (SelectedConversation != "None")
+{
+    <section class="messages">
+        <div><h1>Messages: </h1></div>
+        <div>
+            <div class="messages-input">
+                Message:
+                <input type="text" @bind-value="MessageString" @bind-value:event="oninput" />
+                <button @onclick="SendMessage">Send</button>
+            </div>
         </div>
-    </div>
 
-    @foreach (Message CosmosMessage in Messages)
-    {
-        @CosmosMessage.MessageString
-        <br/>
-    }
+        @foreach (Message CosmosMessage in Messages)
+        {
+            @CosmosMessage.MessageString
+            <br />
+        }
 
-    <button @onclick="RetrieveMessages">Update</button>
-    <button @onclick="ClearChat">Clear Chat</button>
-</section>
-
-<hr>
-@*
-<ul id="messagesList">
-    Your Connection ID is: @hubConnection.ConnectionId
-    <hr>
-    @foreach (var message in messages)
-    {
-        <li>@((MarkupString)message)</li>
-    }
-</ul>
+        <button @onclick="RetrieveMessages">Update</button>
+        <button @onclick="ClearChat">Clear Chat</button>
+    </section>
 
 
-*@
+}
