@@ -15,11 +15,11 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 ////For ChatApp
-//builder.Services.AddResponseCompression(opts =>
-//{
-//    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-//        new[] { "application/octet-stream" });
-//});
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/octet-stream" });
+});
 
 
 
@@ -42,7 +42,7 @@ app.UseRouting();
 
 app.MapBlazorHub();
 ////For ChatApp
-//app.MapHub<ChatHub>("/chathub");
+app.MapHub<ChatHub>("/chathub");
 app.MapFallbackToPage("/_Host");
 
 

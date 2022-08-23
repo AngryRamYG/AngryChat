@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using static BlazorServerSignalRApp.Server.Hubs.ChatHub
 @inject NavigationManager NavigationManager
-@*@implements IAsyncDisposable*@
+@implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
 
@@ -60,9 +60,9 @@
         </div>
     </div>
 
-    @foreach (Message message in Messages)
+    @foreach (Message CosmosMessage in Messages)
     {
-        @message.MessageString
+        @CosmosMessage.MessageString
         <br/>
     }
 

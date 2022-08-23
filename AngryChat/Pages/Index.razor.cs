@@ -11,61 +11,9 @@ namespace AngryChat.Pages
     public partial class Index
     {
         #region SignalR Code
-        //private HubConnection? hubConnection;
+        private HubConnection? hubConnection;
         //private List<string> messages = new List<string>();
-        //private string? Sender;
-        //private string? Message;
-        //private string? RecieverID;
-        //HashSet<string> IDS = UserHandler.ConnectedIds;
-        //protected void update()
-        //{
-        //    IDS = UserHandler.ConnectedIds;
-        //}
-
-        protected override async Task OnInitializedAsync()
-        {
-            await InitializeCosmos();
-            await RetrieveConversations();
-
-        //    hubConnection = new HubConnectionBuilder().WithUrl(NavigationManager.ToAbsoluteUri("/chathub")).Build();
-        //    hubConnection.On<string, string, string, string>("ReceiveMessage", (sender, message, recieverid, senderid) =>
-        //    {
-        //        Console.WriteLine("recieve function");
-        //        if (recieverid == hubConnection.ConnectionId || senderid == hubConnection.ConnectionId)
-        //        {
-        //            var encodedMsg = "";
-        //            if (recieverid == hubConnection.ConnectionId)
-        //                encodedMsg = $"{sender}({senderid}): {message}";
-        //            else
-        //                encodedMsg = $"You -> {recieverid}: {message}";
-        //            messages.Add(encodedMsg);
-        //            InvokeAsync(StateHasChanged);
-        //        }
-        //    });
-        //    await hubConnection.StartAsync();
-        }
-
-        //private async Task Send()
-        //{
-        //    if (hubConnection is not null)
-        //    {
-        //        Console.WriteLine("send function");
-        //        await hubConnection.SendAsync("SendMessage", Sender, Message, RecieverID, hubConnection.ConnectionId);
-        //    }
-        //}
-
-        //public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
-        //public async ValueTask DisposeAsync()
-        //{
-        //    if (hubConnection is not null)
-        //    {
-        //        Console.WriteLine("Dispose function called");
-        //        await hubConnection.DisposeAsync();
-        //    }
-        //}
-
-        #endregion
-
+        HashSet<string> IDS = UserHandler.ConnectedIds;
         Container ConversationsContainer { get; set; }
         Container MessagesContainer { get; set; }
         List<Conversation> Conversations { get; set; } = new List<Conversation>();
@@ -75,6 +23,66 @@ namespace AngryChat.Pages
         public string NewConversationName { get; set; }
         public string SelectedConversation { get; set; }
         public string MessageString { get; set; }
+
+
+        protected void update()
+        {
+            IDS = UserHandler.ConnectedIds;
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            await InitializeCosmos();
+            await RetrieveConversations();
+            await RetrieveMessages();
+
+            hubConnection = new HubConnectionBuilder().WithUrl(NavigationManager.ToAbsoluteUri("/chathub")).Build();
+            hubConnection.On<string, string>("ReceiveMessage", async (message, senderid) =>
+            {
+                Console.WriteLine("Signal R RecieveMessage func called");
+                if (senderid != hubConnection.ConnectionId)
+                {
+                    Messages.Add(new Message() { MessageString = message });
+
+                    await RetrieveMessages();
+                }
+
+                await InvokeAsync(StateHasChanged);
+            });
+            await hubConnection.StartAsync();
+        }
+
+        protected async Task SendMessage()
+        {
+            await SendCosmosMessage();
+            await SendSignalRMessage();
+            await RetrieveMessages();
+        }
+
+
+        private async Task SendSignalRMessage()
+        {
+            if (hubConnection is not null)
+            {
+                Console.WriteLine("Signal R Send func called");
+                await hubConnection.SendAsync("SendMessage", MessageString, hubConnection.ConnectionId);
+                MessageString = null;
+            }
+        }
+
+        public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+        public async ValueTask DisposeAsync()
+        {
+            if (hubConnection is not null)
+            {
+                Console.WriteLine("Dispose function called");
+                await hubConnection.DisposeAsync();
+            }
+        }
+
+        #endregion
+
+
 
         // C# record representing an item in the container
 
@@ -131,12 +139,12 @@ namespace AngryChat.Pages
         protected async Task RetrieveMessages()
         {
             var queryable = MessagesContainer.GetItemLinqQueryable<Message>(requestOptions: new QueryRequestOptions())
-                .Where(key => key.PartitionKey == SelectedConversation) 
+                .Where(key => key.PartitionKey == SelectedConversation)
                 .OrderBy(key => key.PartitionKey);
 
             Messages = await ToListAsync(queryable);
         }
-        protected async Task SendMessage()
+        protected async Task SendCosmosMessage()
         {
             Message message = new()
             {
@@ -147,8 +155,6 @@ namespace AngryChat.Pages
 
 
             await MessagesContainer.CreateItemAsync(message);
-            MessageString = null;
-            await RetrieveMessages();
         }
 
         protected async Task NewConversation()

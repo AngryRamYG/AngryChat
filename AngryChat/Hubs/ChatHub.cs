@@ -4,9 +4,9 @@ namespace BlazorServerSignalRApp.Server.Hubs
 {
     public class ChatHub : Hub
     {
-        public async Task SendMessage(string user, string message, string recieverid, string senderid)
+        public async Task SendMessage(string message, string senderid)
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message, recieverid, senderid);
+            await Clients.All.SendAsync("ReceiveMessage", message, senderid);
         }
 
 
