@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.ResponseCompression;
 using BlazorServerSignalRApp.Server.Hubs;
+using Microsoft.Azure.Cosmos;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,12 +14,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
-//For ChatApp
-builder.Services.AddResponseCompression(opts =>
-{
-    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-        new[] { "application/octet-stream" });
-});
+////For ChatApp
+//builder.Services.AddResponseCompression(opts =>
+//{
+//    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+//        new[] { "application/octet-stream" });
+//});
 
 
 
@@ -38,9 +41,10 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapBlazorHub();
-//For ChatApp
-app.MapHub<ChatHub>("/chathub");
+////For ChatApp
+//app.MapHub<ChatHub>("/chathub");
 app.MapFallbackToPage("/_Host");
 
 
 app.Run();
+

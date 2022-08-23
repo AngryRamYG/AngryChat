@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.8" />
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.30.0" />
     <PackageReference Include="Twilio" Version="5.78.1" />
   </ItemGroup>
 
