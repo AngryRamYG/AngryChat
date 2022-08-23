@@ -6,7 +6,13 @@
 @implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
-
+<section class="profile">
+    <div>
+        <div class="profile-pick">
+            Username: <input type="text" @bind-value="UserName" @bind-value:event="oninput" />
+        </div>
+    </div>
+</section>
 <section class="groups">
     <div><h1>Groups: </h1></div>
     <div>
@@ -65,11 +71,10 @@
 
         @foreach (Message CosmosMessage in Messages)
         {
-            @CosmosMessage.MessageString
+            @($"{CosmosMessage.UserNameString}: {CosmosMessage.MessageString}")
             <br />
         }
 
-        <button @onclick="RetrieveMessages">Update</button>
         <button @onclick="ClearChat">Clear Chat</button>
     </section>
 

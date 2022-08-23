@@ -19,8 +19,10 @@ namespace AngryChat.Pages
         List<Message> Messages { get; set; } = new List<Message>();
 
         public string NewConversationName { get; set; }
+        
         public string? SelectedConversation { get; set; } = "None";
         public string MessageString { get; set; }
+        public string UserName { get; set; }
 
 
         protected void update()
@@ -35,11 +37,12 @@ namespace AngryChat.Pages
             await RetrieveMessages();
 
             hubConnection = new HubConnectionBuilder().WithUrl(NavigationManager.ToAbsoluteUri("/chathub")).Build();
-            hubConnection.On<string, string>("ReceiveMessage", async (message, senderid) =>
+            hubConnection.On<string, string, string>("ReceiveMessage", async (message, senderid, Username) =>
             {
                 Console.WriteLine("Signal R RecieveMessage func called");
                 if (senderid != hubConnection.ConnectionId)
                 {
+                    message = $"[{@UserName}]: {@message}";
                     Messages.Add(new Message() { MessageString = message });
 
                     await RetrieveMessages();
@@ -52,8 +55,8 @@ namespace AngryChat.Pages
 
         protected async Task SendMessage()
         {
-            await SendCosmosMessage();
             await SendSignalRMessage();
+            await SendCosmosMessage();
             await RetrieveMessages();
         }
 
@@ -63,8 +66,8 @@ namespace AngryChat.Pages
             if (hubConnection is not null)
             {
                 Console.WriteLine("Signal R Send func called");
-                await hubConnection.SendAsync("SendMessage", MessageString, hubConnection.ConnectionId);
-                MessageString = null;
+                await hubConnection.SendAsync("SendMessage", MessageString, hubConnection.ConnectionId, UserName);
+                
             }
         }
 
@@ -95,6 +98,7 @@ namespace AngryChat.Pages
         {
             public string id => ID.ToString();
             public Guid ID { get; set; }
+            public string UserNameString { get; set; }
             public string MessageString { get; set; }
             public string PartitionKey { get; set; }
         }
@@ -147,10 +151,11 @@ namespace AngryChat.Pages
             Message message = new()
             {
                 ID = Guid.NewGuid(),
+                UserNameString = UserName,
                 MessageString = MessageString,
                 PartitionKey = SelectedConversation
             };
-
+            MessageString = null;
 
             await MessagesContainer.CreateItemAsync(message);
         }
