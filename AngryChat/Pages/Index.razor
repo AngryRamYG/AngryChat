@@ -6,77 +6,96 @@
 @implements IAsyncDisposable
 
 <PageTitle>Index</PageTitle>
+
+
 <section class="profile">
     <div>
         <div class="profile-pick">
-            Username: <input type="text" @bind-value="UserName" @bind-value:event="oninput" />
+            Username: <input type="text" @bind-value="UserNameTemp" @bind-value:event="oninput" />
+            <button @onclick="AddUserOnline">Connect</button>
+            <button @onclick="RemoveUserOnline">Remove</button>
+            <button @onclick="ClearAllUsers">ClearAll</button>
         </div>
-    </div>
-</section>
-<section class="groups">
-    <div><h1>Groups: </h1></div>
-    <div>
-        <div class="groups-new">
-            <input type="text" @bind-value="NewConversationName" @bind-value:event="oninput" />
-            <button @onclick="NewConversation">Create</button>
-        </div>
-        <div class="groups-select">
-            <select @bind-value="SelectedConversation" @onclick="RetrieveMessages" @bind-value:event="oninput" class="inputForm">
-                <option value="None">Select Group</option>
-                @foreach (Conversation conversation in Conversations)
-                {
-                    <option value="@conversation.ID">@conversation.Name</option>
-                }
+        <div class="options">
+            Select Option:
+            <select @bind-value="Options" @bind-value:event="oninput" class="inputForm">
+                <option value="groupchat">Group Chat</option>
+                <option value="dm">Direct Message</option>
             </select>
         </div>
     </div>
 </section>
 
-@*
-<button class="btn btn-primary" @onclick="update">Update</button>
-
-<br />
-<br />
-<div class="form-group">
-    <label>
-        From:
-        <input @bind="Sender" class="inputForm" />
-    </label>
-</div>
-
-<div class="form-group">
-    To:
-    <select @bind="RecieverID" class="inputForm">
-        <option>Pick an ID</option>
-        @foreach (var id in IDS)
-        {
-            @if (id != hubConnection.ConnectionId)
-            {
-                <option value="@id">@id</option>
-            }
-        }
-    </select>
-</div>*@
-@if (SelectedConversation != "None")
+@if (Options == "dm")
 {
-    <section class="messages">
-        <div><h1>Messages: </h1></div>
+    <section class="directmessage">
         <div>
-            <div class="messages-input">
-                Message:
-                <input type="text" @bind-value="MessageString" @bind-value:event="oninput" />
-                <button @onclick="SendMessage">Send</button>
+            <div class="dm-select">
+                <Button @onclick="RetrieveUsers">Refresh</Button>
+                <select @bind-value="SelectedUserId" @onclick="RetrieveUsers" @bind-value:event="oninput" class="inputForm">
+                    <option value="None">Select User</option>
+                    @foreach (User user in Users)
+                    {
+                        @if (user.ConnectionID != hubConnection.ConnectionId)
+                        {
+                            <option value="@user.id">@user.Name</option>
+                        }
+                    }
+                </select>
             </div>
         </div>
-
-        @foreach (Message CosmosMessage in Messages)
-        {
-            @($"{CosmosMessage.UserNameString}: {CosmosMessage.MessageString}")
-            <br />
-        }
-
-        <button @onclick="ClearChat">Clear Chat</button>
+    </section>
+    <section class="messages">
+        <div>
+            <h1>Messages: </h1>
+            <div class="messages-input">
+                Message:
+                <input type="text" @onkeydown="SendDirectMessageOnKeyDown" @bind-value="MessageString" @bind-value:event="oninput" />
+                <button @onclick="SendDirectMessage">Send</button>
+            </div>
+        </div>
+    </section>
+}
+@if (Options == "groupchat")
+{
+    <section class="groups">
+        <div><h1>Groups: </h1></div>
+        <div>
+            <div class="groups-new">
+                <input type="text" @bind-value="NewConversationName" @bind-value:event="oninput" />
+                <button @onclick="NewConversation">Create</button>
+            </div>
+            <div class="groups-select">
+                <select @bind-value="SelectedConversation" @onclick="RetrieveMessages" @bind-value:event="oninput" class="inputForm">
+                    <option value="None">Select Group</option>
+                    @foreach (Conversation conversation in Conversations)
+                    {
+                        <option value="@conversation.ID">@conversation.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
     </section>
 
+    @if (SelectedConversation != "None")
+    {
+        <section class="messages">
+            <div><h1>Messages: </h1></div>
+            <div>
+                <div class="messages-input">
+                    Message:
+                    <input type="text" @onkeydown="SendGroupMessageOnKeyDown" @bind-value="MessageString" @bind-value:event="oninput" />
+                    <button @onclick="SendGroupMessage">Send</button>
+                </div>
+            </div>
 
+            @foreach (Message CosmosMessage in Messages)
+            {
+                @($"{CosmosMessage.UserNameString}: {CosmosMessage.MessageString}")
+                <div style="font-size: 10px">(time: @CosmosMessage.MessageTime) Is Sent: @CosmosMessage.IsSent - Is Delivered: @CosmosMessage.IsSent</div>
+                <br />
+            }
+            <button @onclick="ClearAllChat">Clear Chat</button>
+        </section>
+    }
 }
