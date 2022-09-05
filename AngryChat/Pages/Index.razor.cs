@@ -263,18 +263,13 @@ namespace AngryChat.Pages
             Conversations = await ToListAsync(queryable);
 
         }
-        protected async Task RetrieveMessages(string option)
+        protected async Task RetrieveMessages()
         {
-            var queryable;
-            if (option == "groupchat")
-            {
-                queryable = MessagesContainer.GetItemLinqQueryable<Message>(requestOptions: new QueryRequestOptions())
-                    .Where(key => key.PartitionKey == SelectedConversation)
-                    .OrderBy(key => key.PartitionKey);
-            }
+            var queryable = MessagesContainer.GetItemLinqQueryable<Message>(requestOptions: new QueryRequestOptions())
+                .Where(key => key.PartitionKey == SelectedConversation)
+                .OrderBy(key => key.PartitionKey);
 
             Messages = await ToListAsync(queryable);
-
         }
         protected async Task RetrieveUsers()
         {
